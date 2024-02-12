@@ -1,17 +1,27 @@
 import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+import page from "./component/page.js";
+import ProductModal from "./component/ProductModal.js";
+import DelModal from "./component/DelModal.js";
+
 
 const site = "https://vue3-course-api.hexschool.io/v2/";
 const api_path = "sana-teashop";
 
 const app = createApp({
+  components:{
+    page,
+    ProductModal,
+    DelModal
+  },
   data() {
     return {
       tempProduct: {
         imagesUrl: [], //多圖使用
       },
+      pages:{},
       products: {},
-      modalProduct: null,
-      modalDele: null,
+      // modalProduct: null,
+      // modalDele: null,
       isNew: false,
     };
   },
@@ -26,8 +36,8 @@ const app = createApp({
     this.checkAdmin();
     this.getProduct();
     //彈跳視窗
-    this.modalProduct = new bootstrap.Modal(this.$refs.productModal);
-    this.modalDele = new bootstrap.Modal(this.$refs.delProductModal);
+    // this.modalProduct = new bootstrap.Modal(this.$refs.productModal);
+    // this.modalDele = new bootstrap.Modal(this.$refs.delProductModal);
   },
 
   methods: {
@@ -45,10 +55,11 @@ const app = createApp({
         });
     },
 
-    getProduct() {
-      const api = `${site}api/${api_path}/admin/products/all`;
+    getProduct( page = 1) {
+      const api = `${site}api/${api_path}/admin/products?page=${page}`;      
       axios.get(api).then((res) => {
-        this.products = res.data.products;
+        this.products = res.data.products;       
+        this.pages = res.data.pagination
       });
     },
 
@@ -66,11 +77,14 @@ const app = createApp({
           this.tempProduct.imagesUrl = []
         }
       }
+      this.$refs.pModal.openProductModal()
 
-      this.modalProduct.show();
+      // this.modalProduct.show();
     },
+
     deleModal(product) {
-      this.modalDele.show();
+      // this.modalDele.show();
+      this.$refs.dModal.openDeleModal()
       this.tempProduct = { ...product };
     },
 
@@ -79,16 +93,14 @@ const app = createApp({
       let api = `${site}api/${api_path}/admin/product`;
       let method = "post";
       //更新
-      if (!this.isNew) {
-        console.log("edit");
+      if (!this.isNew) {        
         api = `${site}api/${api_path}/admin/product/${this.tempProduct.id}`;
-        method = "put";
-        console.log("edit", api, method);
+        method = "put";        
       }
 
       axios[method](api, { data: this.tempProduct }).then((res) => {       
         this.getProduct();
-        this.modalProduct.hide();
+        this.$refs.pModal.closeProductModal()
         this.tempProduct = {};
       });
     },
@@ -97,7 +109,8 @@ const app = createApp({
       const api = `${site}api/${api_path}/admin/product/${this.tempProduct.id}`;
       axios.delete(api).then((res) => {
         this.getProduct();
-        this.modalDele.hide();
+        // this.modalDele.hide();
+        this.$refs.dModal.closeDeleModal()
         this.tempProduct = {};
       });
     },
